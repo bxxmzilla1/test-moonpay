@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-moon-bg text-white antialiased;
+}
+
+.moonpay-frame-container {
+  @apply min-h-[52px] w-full overflow-hidden rounded-xl;
+}
+
+.moonpay-frame-container iframe {
+  @apply w-full border-0;
+}
