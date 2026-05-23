@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MoonPay Test Shop",
-  description: "Buy a test product with MoonPay — PWA demo for fiat-to-crypto checkout.",
+  description: "Buy a test product with one-click guest checkout — no sign-up required.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

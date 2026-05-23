@@ -13,76 +13,32 @@ export function Checkout({ product }: { product: Product }) {
   const [error, setError] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
 
-  const startCheckout = useCallback(async () => {
-    const apiKey = process.env.NEXT_PUBLIC_MOONPAY_API_KEY;
-
-    if (!apiKey) {
-      setError("NEXT_PUBLIC_MOONPAY_API_KEY is not configured.");
-      setStep("error");
-      return;
-    }
-
+  const payAsGuest = useCallback(async () => {
     setStep("loading");
     setError(null);
-    setStatusMessage("Opening MoonPay checkout…");
+    setStatusMessage("Processing payment…");
 
     try {
-      const { loadMoonPay } = await import("@moonpay/moonpay-js");
-      const moonPay = await loadMoonPay();
-
-      if (!moonPay) {
-        throw new Error("Failed to load MoonPay SDK");
-      }
-
-      const widget = moonPay({
-        flow: "buy",
-        environment: "sandbox",
-        variant: "overlay",
-        useWarnBeforeRefresh: false,
-        params: {
-          apiKey,
-          baseCurrencyCode: product.sourceCurrency.toLowerCase(),
-          baseCurrencyAmount: product.priceUsd,
-          defaultCurrencyCode: product.destinationCurrency.toLowerCase(),
-          walletAddress: WALLET_ADDRESS,
-        },
-        handlers: {
-          async onTransactionCompleted(props) {
-            setTransactionId(props.id);
-            setStep("complete");
-            setStatusMessage("Purchase complete!");
-          },
-        },
-      });
-
-      if (!widget) {
-        throw new Error("Failed to initialize MoonPay widget");
-      }
-
-      const urlForSignature = widget.generateUrlForSigning();
-
-      const signRes = await fetch("/api/sign", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urlForSignature }),
+        body: JSON.stringify({ productId: product.id }),
       });
 
-      const signData = await signRes.json();
-      if (!signRes.ok) {
-        throw new Error(signData.error ?? "Failed to sign checkout URL");
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Payment failed");
       }
 
-      widget.updateSignature(signData.signature);
-      widget.show();
-
-      setStep("idle");
-      setStatusMessage("Complete your purchase in the MoonPay widget");
+      setTransactionId(data.transactionId);
+      setStep("complete");
+      setStatusMessage("Payment successful — no MoonPay account needed.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStep("error");
-      setStatusMessage("Checkout failed");
+      setStatusMessage("Payment failed");
     }
-  }, [product]);
+  }, [product.id]);
 
   const reset = () => {
     setStep("idle");
@@ -111,14 +67,18 @@ export function Checkout({ product }: { product: Product }) {
             <span className="text-2xl font-bold">${product.priceUsd}</span>
           </div>
 
-          <div className="mt-4 rounded-xl bg-moon-bg/60 p-4 text-sm">
+          <div className="mt-4 space-y-2 rounded-xl bg-moon-bg/60 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-moon-muted">Receive</span>
               <span className="font-medium">{product.destinationCurrency}</span>
             </div>
-            <div className="mt-2 flex justify-between">
-              <span className="text-moon-muted">Wallet</span>
-              <span className="max-w-[180px] truncate font-mono text-xs">{WALLET_ADDRESS}</span>
+            <div className="flex justify-between gap-4">
+              <span className="shrink-0 text-moon-muted">Wallet</span>
+              <span className="truncate font-mono text-xs">{WALLET_ADDRESS}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-moon-muted">Checkout</span>
+              <span className="font-medium text-emerald-400">Guest — no sign-up</span>
             </div>
           </div>
         </div>
@@ -130,11 +90,11 @@ export function Checkout({ product }: { product: Product }) {
         {(step === "idle" || step === "loading") && (
           <button
             type="button"
-            onClick={startCheckout}
+            onClick={payAsGuest}
             disabled={step === "loading"}
             className="w-full rounded-xl bg-moon-accent px-6 py-4 text-base font-semibold text-white transition hover:bg-violet-600 active:scale-[0.98] disabled:opacity-60"
           >
-            {step === "loading" ? "Opening checkout…" : `Buy for $${product.priceUsd}`}
+            {step === "loading" ? "Processing…" : `Pay $${product.priceUsd} as guest`}
           </button>
         )}
 
@@ -149,21 +109,9 @@ export function Checkout({ product }: { product: Product }) {
         )}
       </div>
 
-      <details className="rounded-xl border border-moon-border bg-moon-card/50 p-4 text-sm text-moon-muted">
-        <summary className="cursor-pointer font-medium text-white">Integration details</summary>
-        <ul className="mt-3 list-inside list-disc space-y-1 text-xs">
-          <li>
-            Widget SDK: <code>@moonpay/moonpay-js</code>
-          </li>
-          <li>
-            URL signing via <code>/api/sign</code> (secret key stays server-side)
-          </li>
-          <li>Sandbox mode — use test cards from MoonPay docs</li>
-          <li>
-            Wallet: <code className="break-all">{WALLET_ADDRESS}</code>
-          </li>
-        </ul>
-      </details>
+      <p className="text-center text-xs text-moon-muted">
+        One-click guest checkout — no MoonPay account or email verification required.
+      </p>
     </div>
   );
 }
@@ -189,7 +137,7 @@ function StatusPanel({
   return (
     <div className={`rounded-xl border px-4 py-3 text-sm ${tone}`} role="status" aria-live="polite">
       {error ? error : message}
-      {transactionId && <p className="mt-1 font-mono text-xs opacity-80">Transaction: {transactionId}</p>}
+      {transactionId && <p className="mt-1 font-mono text-xs opacity-80">Order: {transactionId}</p>}
     </div>
   );
 }

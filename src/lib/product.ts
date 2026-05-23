@@ -2,7 +2,7 @@ export const TEST_PRODUCT = {
   id: "test-crypto-pack",
   name: "Test Crypto Pack",
   description:
-    "A test digital product. Pay with MoonPay and receive ETH in your wallet. Uses MoonPay test mode — no real funds.",
+    "A test digital product. Pay instantly as a guest — no MoonPay account or sign-up required.",
   priceUsd: "10.00",
   sourceCurrency: "USD",
   destinationCurrency: "ETH",

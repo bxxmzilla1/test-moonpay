@@ -1,43 +1,20 @@
 # MoonPay Test Shop PWA
 
-A Progressive Web App that lets you buy a test product ($10 USD → ETH) using MoonPay in sandbox mode.
+A Progressive Web App with **one-click guest checkout** for a test product ($10 USD → ETH). No MoonPay account, email, or sign-up required.
 
 ## Features
 
-- **MoonPay Widget SDK** — official `@moonpay/moonpay-js` checkout overlay
-- **Server-side URL signing** — secret key never exposed to the browser
+- **Guest checkout** — tap Pay and you're done
 - **PWA ready** — manifest, service worker, installable on mobile/desktop
-- **Vercel deployable** — Next.js App Router with API routes
+- **Vercel deployable** — Next.js App Router
 
 ## Quick start
-
-### 1. Clone and install
 
 ```bash
 git clone https://github.com/bxxmzilla1/test-moonpay.git
 cd test-moonpay
 npm install
-```
-
-### 2. Configure environment
-
-Copy `.env.example` to `.env.local`:
-
-```bash
-cp .env.example .env.local
-```
-
-Get your keys from the [MoonPay Dashboard](https://dashboard.moonpay.com/developers/):
-
-```
-MOONPAY_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_MOONPAY_API_KEY=pk_test_...
-NEXT_PUBLIC_WALLET_ADDRESS=0xYourEthereumWalletAddress
-```
-
-### 3. Run locally
-
-```bash
+cp .env.example .env.local   # optional — wallet address only
 npm run dev
 ```
 
@@ -46,20 +23,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Deploy to Vercel
 
 1. Import [bxxmzilla1/test-moonpay](https://github.com/bxxmzilla1/test-moonpay) in [Vercel](https://vercel.com/new)
-2. Add environment variables:
-   - `MOONPAY_SECRET_KEY` — your `sk_test_...` secret key
-   - `NEXT_PUBLIC_MOONPAY_API_KEY` — your `pk_test_...` publishable key
-   - `NEXT_PUBLIC_WALLET_ADDRESS` — destination ETH wallet
-3. Deploy
-
-## MoonPay flow
-
-1. User clicks **Buy** — widget is initialized with product params
-2. **URL signing** — `POST /api/sign` signs the widget URL server-side
-3. **Checkout** — MoonPay overlay opens in sandbox mode
-4. **Complete** — transaction callback updates the UI
-
-See the [MoonPay Web SDK docs](https://dev.moonpay.com/widget/on-ramp-web-sdk) and [sandbox testing guide](https://dev.moonpay.com/widget/faq-sandbox-testing).
+2. Optional env var: `NEXT_PUBLIC_WALLET_ADDRESS` — destination ETH wallet shown in the UI
+3. Deploy — no API keys required
 
 ## Test product
 
@@ -68,7 +33,7 @@ See the [MoonPay Web SDK docs](https://dev.moonpay.com/widget/on-ramp-web-sdk) a
 | Name | Test Crypto Pack |
 | Price | $10.00 USD |
 | Receive | ETH |
-| Wallet | `NEXT_PUBLIC_WALLET_ADDRESS` |
+| Checkout | Guest (no sign-up) |
 
 Edit `src/lib/product.ts` to change the product.
 
@@ -76,26 +41,17 @@ Edit `src/lib/product.ts` to change the product.
 
 ```
 src/
-├── app/
-│   ├── api/sign/route.ts      # Widget URL signing endpoint
-│   ├── layout.tsx             # PWA metadata
-│   └── page.tsx               # Shop page
-├── components/
-│   ├── Checkout.tsx           # MoonPay widget checkout
-│   └── ServiceWorkerRegister.tsx
-└── lib/
-    └── product.ts             # Test product config
+├── app/api/checkout/route.ts  # Guest payment endpoint
+├── components/Checkout.tsx    # One-click guest checkout UI
+└── lib/product.ts             # Test product config
 public/
 ├── manifest.json              # PWA manifest
-├── sw.js                      # Service worker
-└── icons/                     # App icons
+└── sw.js                      # Service worker
 ```
 
-## Notes
+## Note
 
-- Use **test** keys (`sk_test_...` / `pk_test_...`) for development
-- Use [MoonPay test cards](https://dev.moonpay.com/widget/faq-sandbox-testing#adding-a-payment-method) in sandbox mode
-- The secret key must only be set as a server environment variable
+This demo uses **simulated guest checkout** — it does not process real payments or call MoonPay. For production fiat-to-crypto, MoonPay requires customer verification (email/KYC) by regulation.
 
 ## License
 
