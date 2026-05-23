@@ -18,9 +18,9 @@ export default function Home() {
       <Checkout product={TEST_PRODUCT} />
 
       <footer className="mt-auto pt-10 text-center text-xs text-moon-muted">
-        Test mode only. Configure{" "}
-        <code className="rounded bg-moon-card px-1 py-0.5">MOONPAY_SECRET_KEY</code>{" "}
-        in Vercel env vars.
+        Test mode only. Set{" "}
+        <code className="rounded bg-moon-card px-1 py-0.5">MOONPAY_SECRET_KEY</code> and{" "}
+        <code className="rounded bg-moon-card px-1 py-0.5">NEXT_PUBLIC_MOONPAY_API_KEY</code> in Vercel.
       </footer>
 
       <ServiceWorkerRegister />

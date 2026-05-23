@@ -1,11 +1,11 @@
 # MoonPay Test Shop PWA
 
-A Progressive Web App that demonstrates the [MoonPay Platform API](https://dev.moonpay.com/platform/overview/introduction) headless checkout flow. Buy a test product ($10 USD → ETH) using MoonPay test mode.
+A Progressive Web App that lets you buy a test product ($10 USD → ETH) using MoonPay in sandbox mode.
 
 ## Features
 
-- **MoonPay Platform integration** — session token, connect, payment methods, quote, Apple Pay
-- **Server-side session creation** — secret API key never exposed to the browser
+- **MoonPay Widget SDK** — official `@moonpay/moonpay-js` checkout overlay
+- **Server-side URL signing** — secret key never exposed to the browser
 - **PWA ready** — manifest, service worker, installable on mobile/desktop
 - **Vercel deployable** — Next.js App Router with API routes
 
@@ -14,8 +14,8 @@ A Progressive Web App that demonstrates the [MoonPay Platform API](https://dev.m
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
-cd moonpay-test-pwa
+git clone https://github.com/bxxmzilla1/test-moonpay.git
+cd test-moonpay
 npm install
 ```
 
@@ -27,10 +27,11 @@ Copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-Set your MoonPay **test** secret key from the [MoonPay Developer Dashboard](https://dev.moonpay.com):
+Get your keys from the [MoonPay Dashboard](https://dashboard.moonpay.com/developers/):
 
 ```
 MOONPAY_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_MOONPAY_API_KEY=pk_test_...
 NEXT_PUBLIC_WALLET_ADDRESS=0xYourEthereumWalletAddress
 ```
 
@@ -44,24 +45,21 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Deploy to Vercel
 
-1. Push this repo to GitHub
-2. Import the project in [Vercel](https://vercel.com/new)
-3. Add environment variables:
-   - `MOONPAY_SECRET_KEY` — your MoonPay test secret key
+1. Import [bxxmzilla1/test-moonpay](https://github.com/bxxmzilla1/test-moonpay) in [Vercel](https://vercel.com/new)
+2. Add environment variables:
+   - `MOONPAY_SECRET_KEY` — your `sk_test_...` secret key
+   - `NEXT_PUBLIC_MOONPAY_API_KEY` — your `pk_test_...` publishable key
    - `NEXT_PUBLIC_WALLET_ADDRESS` — destination ETH wallet
-4. Deploy
-
-Vercel auto-detects Next.js — no extra config needed.
+3. Deploy
 
 ## MoonPay flow
 
-This app follows the [MoonPay Platform quickstart](https://dev.moonpay.com/platform/overview/introduction):
+1. User clicks **Buy** — widget is initialized with product params
+2. **URL signing** — `POST /api/sign` signs the widget URL server-side
+3. **Checkout** — MoonPay overlay opens in sandbox mode
+4. **Complete** — transaction callback updates the UI
 
-1. **Session token** — `POST /api/session` creates a token server-side
-2. **Connect customer** — SDK checks connection; shows connect frame if needed
-3. **Payment methods** — lists available methods (Apple Pay in test mode)
-4. **Quote** — fetches fees and ETH amount for the test product
-5. **Apple Pay** — headless payment button (mock in test mode)
+See the [MoonPay Web SDK docs](https://dev.moonpay.com/widget/on-ramp-web-sdk) and [sandbox testing guide](https://dev.moonpay.com/widget/faq-sandbox-testing).
 
 ## Test product
 
@@ -79,11 +77,11 @@ Edit `src/lib/product.ts` to change the product.
 ```
 src/
 ├── app/
-│   ├── api/session/route.ts   # MoonPay session token endpoint
+│   ├── api/sign/route.ts      # Widget URL signing endpoint
 │   ├── layout.tsx             # PWA metadata
 │   └── page.tsx               # Shop page
 ├── components/
-│   ├── Checkout.tsx           # MoonPay checkout flow
+│   ├── Checkout.tsx           # MoonPay widget checkout
 │   └── ServiceWorkerRegister.tsx
 └── lib/
     └── product.ts             # Test product config
@@ -95,9 +93,9 @@ public/
 
 ## Notes
 
-- Use a **test** API key (`sk_test_...`) for development
-- In test mode, MoonPay renders a **mock Apple Pay button** — no real Apple Pay account needed
-- The secret key must only be set as a server environment variable, never in client code
+- Use **test** keys (`sk_test_...` / `pk_test_...`) for development
+- Use [MoonPay test cards](https://dev.moonpay.com/widget/faq-sandbox-testing#adding-a-payment-method) in sandbox mode
+- The secret key must only be set as a server environment variable
 
 ## License
 
