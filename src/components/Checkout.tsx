@@ -30,6 +30,10 @@ export function Checkout({ product }: { product: Product }) {
       const { loadMoonPay } = await import("@moonpay/moonpay-js");
       const moonPay = await loadMoonPay();
 
+      if (!moonPay) {
+        throw new Error("Failed to load MoonPay SDK");
+      }
+
       const widget = moonPay({
         flow: "buy",
         environment: "sandbox",
@@ -43,17 +47,17 @@ export function Checkout({ product }: { product: Product }) {
           walletAddress: WALLET_ADDRESS,
         },
         handlers: {
-          onTransactionCompleted(props) {
-            const id =
-              (props as { transactionId?: string; id?: string }).transactionId ??
-              (props as { id?: string }).id ??
-              null;
-            setTransactionId(id);
+          async onTransactionCompleted(props) {
+            setTransactionId(props.id);
             setStep("complete");
             setStatusMessage("Purchase complete!");
           },
         },
       });
+
+      if (!widget) {
+        throw new Error("Failed to initialize MoonPay widget");
+      }
 
       const urlForSignature = widget.generateUrlForSigning();
 
